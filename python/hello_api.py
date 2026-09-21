@@ -36,3 +36,18 @@ def create_user(user: UserCreate):
             "name": new_user.name,
             "email": new_user.email
         }
+
+
+@app.get("/users")
+def get_users():
+    with Session(engine) as session:
+        users = session.query(User).all()
+
+        return [
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email
+            }
+            for user in users
+        ]
