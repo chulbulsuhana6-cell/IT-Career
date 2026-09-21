@@ -38,16 +38,15 @@ def create_user(user: UserCreate):
         }
 
 
-@app.get("/users")
-def get_users():
+@app.get("/users/{user_id}")
+def get_user(user_id:int):
     with Session(engine) as session:
-        users = session.query(User).all()
+        user = session.get(User, user_id)
+        if user is None:
+            return{"message":"User not found"}
+        return {
+            "id":user.id,
+            "name":user.name,
+            "email":user.email
 
-        return [
-            {
-                "id": user.id,
-                "name": user.name,
-                "email": user.email
-            }
-            for user in users
-        ]
+        }
