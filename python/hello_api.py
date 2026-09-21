@@ -38,15 +38,43 @@ def create_user(user: UserCreate):
         }
 
 
+@app.get("/users")
+def get_users():
+    with Session(engine) as session:
+        users = session.query(User).all()
+
+        return [
+            {
+                "id": user.id,
+                "name": user.name,
+                "email": user.email
+            }
+            for user in users
+        ]
+
+
 @app.get("/users/{user_id}")
-def get_user(user_id:int):
+def get_user(user_id: int):
     with Session(engine) as session:
         user = session.get(User, user_id)
+
+        if user is None:
+            return {"message": "User not found"}
+
+        return {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email
+        }
+
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int):
+    with Session(engine) as session:
+        user = session.get(User, user_id)
+
         if user is None:
             return{"message":"User not found"}
-        return {
-            "id":user.id,
-            "name":user.name,
-            "email":user.email
-
-        }
+        session.delete(user)
+        session.commit()
+        return{"message":"User deleted successfully"}
