@@ -74,7 +74,30 @@ def delete_user(user_id: int):
         user = session.get(User, user_id)
 
         if user is None:
-            return{"message":"User not found"}
+            return {"message": "User not found"}
+
         session.delete(user)
         session.commit()
-        return{"message":"User deleted successfully"}
+
+        return {"message": "User deleted successfully"}
+
+
+@app.put("/users/{user_id}")
+def update_user(user_id: int, user_data: UserCreate):
+    with Session(engine) as session:
+        user = session.get(User, user_id)
+
+        if user is None:
+            return {"message": "User not found"}
+
+        user.name = user_data.name
+        user.email = user_data.email
+
+        session.commit()
+        session.refresh(user)
+
+        return {
+            "id": user.id,
+            "name": user.name,
+            "email": user.email
+        }
