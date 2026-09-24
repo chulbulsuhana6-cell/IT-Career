@@ -2,7 +2,8 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+
 from python.models import Base
 
 
@@ -16,6 +17,15 @@ if not DATABASE_URL:
 
 engine = create_engine(DATABASE_URL)
 
+with engine.connect() as connection:
+    connection.execute(
+        text(
+            "ALTER TABLE users "
+            "ADD COLUMN IF NOT EXISTS hashed_password VARCHAR(255)"
+        )
+    )
+    connection.commit()
+
 Base.metadata.create_all(engine)
 
-print("Users table created successfully!")
+print("Database updated successfully!")
