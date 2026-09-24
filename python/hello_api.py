@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI,HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -59,7 +59,7 @@ def get_user(user_id: int):
         user = session.get(User, user_id)
 
         if user is None:
-            return {"message": "User not found"}
+            raise HTTPException(status_code=404, detail="User not found")
 
         return {
             "id": user.id,
@@ -68,27 +68,13 @@ def get_user(user_id: int):
         }
 
 
-@app.delete("/users/{user_id}")
-def delete_user(user_id: int):
-    with Session(engine) as session:
-        user = session.get(User, user_id)
-
-        if user is None:
-            return {"message": "User not found"}
-
-        session.delete(user)
-        session.commit()
-
-        return {"message": "User deleted successfully"}
-
-
 @app.put("/users/{user_id}")
 def update_user(user_id: int, user_data: UserCreate):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
         if user is None:
-            return {"message": "User not found"}
+            raise HTTPException(status_code=404, detail="User not found")
 
         user.name = user_data.name
         user.email = user_data.email
@@ -101,3 +87,13 @@ def update_user(user_id: int, user_data: UserCreate):
             "name": user.name,
             "email": user.email
         }
+
+@app.delete("/users/{user_id}")
+def delete_user(user_id: int):
+    with Session(engine) as session:
+        user =session.get(User,user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail="User not found")
+        session.delete(user)
+        session.commit()
+        return {"message": "User deleted successfully"}
