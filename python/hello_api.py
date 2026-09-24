@@ -1,5 +1,6 @@
-from fastapi import FastAPI,HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, EmailStr, Field
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from python.database import engine
@@ -10,8 +11,8 @@ app = FastAPI()
 
 
 class UserCreate(BaseModel):
-    name: str
-    email: str
+    name: str = Field(min_length=2, max_length=100)
+    email: EmailStr
 
 
 @app.get("/")
@@ -28,8 +29,16 @@ def create_user(user: UserCreate):
         )
 
         session.add(new_user)
-        session.commit()
-        session.refresh(new_user)
+
+        try:
+            session.commit()
+            session.refresh(new_user)
+        except IntegrityError:
+            session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail="Email already exists"
+            )
 
         return {
             "id": new_user.id,
@@ -59,7 +68,10 @@ def get_user(user_id: int):
         user = session.get(User, user_id)
 
         if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
 
         return {
             "id": user.id,
@@ -74,13 +86,23 @@ def update_user(user_id: int, user_data: UserCreate):
         user = session.get(User, user_id)
 
         if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
 
         user.name = user_data.name
         user.email = user_data.email
 
-        session.commit()
-        session.refresh(user)
+        try:
+            session.commit()
+            session.refresh(user)
+        except IntegrityError:
+            session.rollback()
+            raise HTTPException(
+                status_code=409,
+                detail="Email already exists"
+            )
 
         return {
             "id": user.id,
@@ -88,12 +110,21 @@ def update_user(user_id: int, user_data: UserCreate):
             "email": user.email
         }
 
+
 @app.delete("/users/{user_id}")
 def delete_user(user_id: int):
     with Session(engine) as session:
-        user =session.get(User,user_id)
+        user = session.get(User, user_id)
+
         if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(
+                status_code=404,
+                detail="User not found"
+            )
+
         session.delete(user)
         session.commit()
-        return {"message": "User deleted successfully"}
+
+        return {
+            "message": "User deleted successfully"
+        }
