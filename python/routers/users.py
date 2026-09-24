@@ -1,26 +1,19 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel, EmailStr, Field
+from fastapi import APIRouter, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from python.database import engine
 from python.models import User
+from python.schemas import UserCreate
 
 
-app = FastAPI()
+router = APIRouter(
+    prefix="/users",
+    tags=["Users"]
+)
 
 
-class UserCreate(BaseModel):
-    name: str = Field(min_length=2, max_length=100)
-    email: EmailStr
-
-
-@app.get("/")
-def home():
-    return {"message": "My Python backend is working!"}
-
-
-@app.post("/users")
+@router.post("/")
 def create_user(user: UserCreate):
     with Session(engine) as session:
         new_user = User(
@@ -47,7 +40,7 @@ def create_user(user: UserCreate):
         }
 
 
-@app.get("/users")
+@router.get("/")
 def get_users():
     with Session(engine) as session:
         users = session.query(User).all()
@@ -62,7 +55,7 @@ def get_users():
         ]
 
 
-@app.get("/users/{user_id}")
+@router.get("/{user_id}")
 def get_user(user_id: int):
     with Session(engine) as session:
         user = session.get(User, user_id)
@@ -80,7 +73,7 @@ def get_user(user_id: int):
         }
 
 
-@app.put("/users/{user_id}")
+@router.put("/{user_id}")
 def update_user(user_id: int, user_data: UserCreate):
     with Session(engine) as session:
         user = session.get(User, user_id)
@@ -111,7 +104,7 @@ def update_user(user_id: int, user_data: UserCreate):
         }
 
 
-@app.delete("/users/{user_id}")
+@router.delete("/{user_id}")
 def delete_user(user_id: int):
     with Session(engine) as session:
         user = session.get(User, user_id)
