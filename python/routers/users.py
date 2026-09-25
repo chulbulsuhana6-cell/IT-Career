@@ -1,14 +1,13 @@
-from fastapi import APIRouter,Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
-from python.auth import create_access_token
 from python.database import engine
 from python.dependencies import get_current_user
-
 from python.models import User
-from python.schemas import UserCreate, UserLogin
-from python.security import hash_password, verify_password
+from python.schemas import UserCreate, UserUpdate
+from python.security import hash_password
+
 
 router = APIRouter(
     prefix="/users",
@@ -16,25 +15,14 @@ router = APIRouter(
 )
 
 
-@router.post("/login")
-def login_user( user_data:UserLogin):
+@router.post("/")
+def create_user(user: UserCreate):
     with Session(engine) as session:
-        user = session.query(User).filter(User.email == user_data.email).first()
-
-        if  user is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid email or password"
-            )
-        if not verify_password(user_data.password, user.hashed_password):
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid email or password"
-            )
-
-        access_token = create_access_token(data={"sub": user.email})
-
-        return {"access_token": access_token, "token_type": "bearer"}
+        new_user = User(
+            name=user.name,
+            email=user.email,
+            hashed_password=hash_password(user.password)
+        )
 
         session.add(new_user)
 
@@ -71,7 +59,7 @@ def get_users(current_user: str = Depends(get_current_user)):
 
 
 @router.get("/{user_id}")
-def get_user(user_id: int):
+def get_user(user_id: int,current_user: str = Depends(get_current_user)):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
@@ -89,7 +77,7 @@ def get_user(user_id: int):
 
 
 @router.put("/{user_id}")
-def update_user(user_id: int, user_data: UserCreate):
+def update_user(user_id: int, user_data: UserUpdate, current_user: str = Depends(get_current_user)):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
@@ -120,7 +108,7 @@ def update_user(user_id: int, user_data: UserCreate):
 
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int):
+def delete_user(user_id: int, current_user: str = Depends(get_current_user)):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
