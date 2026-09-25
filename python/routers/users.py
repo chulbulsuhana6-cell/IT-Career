@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from python.database import engine
 from python.dependencies import get_current_user
 from python.models import User
-from python.schemas import UserCreate, UserUpdate
+from python.schemas import UserCreate, UserUpdate, UserResponse
 from python.security import hash_password
 
 
@@ -15,7 +15,7 @@ router = APIRouter(
 )
 
 
-@router.post("/")
+@router.post("/", response_model=UserResponse)
 def create_user(user: UserCreate):
     with Session(engine) as session:
         new_user = User(
@@ -43,7 +43,7 @@ def create_user(user: UserCreate):
         }
 
 
-@router.get("/")
+@router.get("/", response_model=list[UserResponse])
 def get_users(current_user: str = Depends(get_current_user)):
     with Session(engine) as session:
         users = session.query(User).all()
@@ -58,8 +58,11 @@ def get_users(current_user: str = Depends(get_current_user)):
         ]
 
 
-@router.get("/{user_id}")
-def get_user(user_id: int,current_user: str = Depends(get_current_user)):
+@router.get("/{user_id}", response_model=UserResponse)
+def get_user(
+    user_id: int,
+    current_user: str = Depends(get_current_user)
+):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
@@ -76,8 +79,12 @@ def get_user(user_id: int,current_user: str = Depends(get_current_user)):
         }
 
 
-@router.put("/{user_id}")
-def update_user(user_id: int, user_data: UserUpdate, current_user: str = Depends(get_current_user)):
+@router.put("/{user_id}", response_model=UserResponse)
+def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    current_user: str = Depends(get_current_user)
+):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
@@ -108,7 +115,10 @@ def update_user(user_id: int, user_data: UserUpdate, current_user: str = Depends
 
 
 @router.delete("/{user_id}")
-def delete_user(user_id: int, current_user: str = Depends(get_current_user)):
+def delete_user(
+    user_id: int,
+    current_user: str = Depends(get_current_user)
+):
     with Session(engine) as session:
         user = session.get(User, user_id)
 
