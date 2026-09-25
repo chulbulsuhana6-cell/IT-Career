@@ -5,7 +5,11 @@ from python.database import engine
 from python.routers import auth, users
 
 
-app = FastAPI()
+app = FastAPI(
+    title="IT Career Backend API",
+    description="Backend API built with FastAPI, postgreSQL, SQLAlchemy, and JWT for authentication. ",
+    version="1.0.0"
+)
 
 
 app.include_router(auth.router)
