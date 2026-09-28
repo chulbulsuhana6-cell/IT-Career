@@ -61,13 +61,13 @@ def get_user(
 
     if user is None:
         raise HTTPException(
-            status_code=404,
-            detail="User not found"
+            status_code=403,
+            detail="You can only access your own account"
         )
     if user.id !=current_user.id:
         raise HTTPException(
-            status_code=404,
-            detail="User not found"
+            status_code=403,
+            detail="You can only access your own account"
         )
 
     return user
