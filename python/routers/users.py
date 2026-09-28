@@ -64,6 +64,11 @@ def get_user(
             status_code=404,
             detail="User not found"
         )
+    if user.id !=current_user.id:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
 
     return user
 
@@ -81,6 +86,11 @@ def update_user(
         raise HTTPException(
             status_code=404,
             detail="User not found"
+        )
+    if user.id !=current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="you can only access your own account"
         )
 
     user.name = user_data.name
@@ -111,6 +121,11 @@ def delete_user(
         raise HTTPException(
             status_code=404,
             detail="User not found"
+        )
+    if user.id !=current_user.id:
+        raise HTTPException(
+            status_code=403,
+            detail="You can only accessnyour own account"
         )
 
     db.delete(user)
