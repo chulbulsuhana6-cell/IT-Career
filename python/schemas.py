@@ -20,3 +20,17 @@ class UserResponse(BaseModel):
         id: int
         name: str
         email: EmailStr
+
+class JobCreate(BaseModel):
+    company: str = Field(min_length=2, max_length=150)
+    role: str = Field(min_length=2, max_length=150)
+    location: str = Field(min_length=2, max_length=150)
+    status: str = Field(default="Applied", min_length=2, max_length=50)
+
+
+class JobResponse(BaseModel):
+    id: int
+    company: str
+    role: str
+    location: str
+    status: str       
